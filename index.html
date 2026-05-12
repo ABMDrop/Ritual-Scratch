@@ -417,8 +417,8 @@ async function loadUserFromDB() {
     myPts = data.total_points || 0;
     myScratches = data.total_scratches || 0;
     myUsername = data.username || '';
-    const lastClaim = data.last_claim ? Date.parse(data.last_claim) : 0;
-    const diff = Date.now() - lastClaim;
+    const lastClaim = data.last_claim ? new Date(data.last_claim.endsWith('Z') ? data.last_claim : data.last_claim + 'Z').getTime() : 0;
+    const diff = Date.now() - lastClaim; // both UTC ms
     const cooldown = 24 * 60 * 60 * 1000;
     if (diff < cooldown) { disableScratch(); startCountdown(cooldown - diff); }
     else enableScratch();
@@ -427,6 +427,7 @@ async function loadUserFromDB() {
   } else {
     await db.from('leaderboard').insert({ wallet_address:wallet.toLowerCase(), username:'', total_points:0, total_scratches:0 });
     enableScratch();
+    document.getElementById('claimBtn').style.display = 'none';
     document.getElementById('usernameBanner').classList.add('show');
   }
   updateStats();
@@ -446,7 +447,7 @@ async function saveClaimToDB(pts) {
   await db.from('leaderboard').update({
     total_points: myPts + pts,
     total_scratches: myScratches + 1,
-    last_claim: new Date().toUTCString(),
+    last_claim: new Date().toISOString(),
     username: myUsername || null
   }).eq('wallet_address', wallet.toLowerCase());
   myPts += pts;
@@ -497,6 +498,7 @@ function enableScratch() {
   document.getElementById('scratchArea').style.display = 'block';
   document.getElementById('overlayMsg').style.display = 'none';
   document.getElementById('claimBtn').style.display = 'none';
+  document.getElementById('claimBtn').disabled = false;
   document.getElementById('statCountdown').textContent = 'NOW!';
   document.getElementById('timerBadge').textContent = '🎴 Card Available!';
   currentPrize = rollPrize(); scratched = false; claimed = false;
@@ -555,7 +557,10 @@ async function claimPoints() {
   try {
     try { await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:RITUAL_CHAIN.chainId}]}); }
     catch(sw){if(sw.code===4902)await addRitualNetwork();}
-    const txHash=await window.ethereum.request({method:'eth_sendTransaction',params:[{from:wallet,to:wallet,value:'0x0',gas:'0x5208',type:'0x0'}]});
+    // Try legacy tx first (Ritual testnet requirement)
+    const txParams = { from:wallet, to:wallet, value:'0x0', gas:'0x5208', gasPrice:'0x3B9ACA00' };
+    const provider = window.ethereum?.providers?.find?.(p=>p.isMetaMask) || window.ethereum;
+    const txHash=await provider.request({method:'eth_sendTransaction',params:[txParams]});
     claimed=true;
     btn.textContent='✅ Claimed!';
     btn.style.background='linear-gradient(135deg,var(--purple),#6d28d9)';
