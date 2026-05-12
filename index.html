@@ -119,13 +119,13 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
 .wmodal{display:none;position:fixed;inset:0;background:rgba(5,6,15,0.88);z-index:10001;align-items:center;justify-content:center;padding:20px;}
 .wmodal.open{display:flex;}
 .wmodal-box{background:var(--surface);border:1px solid var(--purple);border-radius:24px;padding:32px;max-width:380px;width:100%;box-shadow:0 0 60px rgba(139,92,246,0.3);}
-.wmodal-title{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;text-align:center;margin-bottom:8px;}
-.wmodal-sub{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:center;letter-spacing:1px;margin-bottom:24px;}
-.wallet-option{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;cursor:pointer;margin-bottom:10px;transition:all 0.2s;width:100%;}
+.wmodal-title{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;text-align:center;margin-bottom:8px;color:#fff;}
+.wmodal-sub{font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.45);text-align:center;letter-spacing:1px;margin-bottom:24px;}
+.wallet-option{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;cursor:pointer;margin-bottom:10px;transition:all 0.2s;width:100%;color:#fff;}
 .wallet-option:hover{border-color:var(--purple);background:rgba(139,92,246,0.08);}
 .wallet-option-icon{font-size:1.6rem;width:36px;text-align:center;}
-.wallet-option-name{font-weight:700;font-size:15px;}
-.wallet-option-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+.wallet-option-name{font-weight:700;font-size:15px;color:#ffffff;}
+.wallet-option-sub{font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.55);}
 .wmodal-close{width:100%;margin-top:8px;padding:12px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Cabinet Grotesk',sans-serif;font-weight:600;font-size:13px;border-radius:12px;cursor:pointer;transition:all 0.2s;}
 .wmodal-close:hover{border-color:var(--purple);color:var(--purple);}
 .wmodal-divider{text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin:12px 0;}
@@ -234,33 +234,31 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
 <div class="wmodal" id="walletModal">
   <div class="wmodal-box">
     <div class="wmodal-title">Connect Wallet</div>
-    <div class="wmodal-sub">CHOOSE YOUR WALLET TO CONTINUE</div>
+    <div class="wmodal-sub">METAMASK REQUIRED FOR RITUAL TESTNET</div>
 
     <button class="wallet-option" onclick="connectWithMetaMask()">
       <div class="wallet-option-icon">🦊</div>
-      <div><div class="wallet-option-name">MetaMask</div><div class="wallet-option-sub">Most popular browser wallet</div></div>
+      <div>
+        <div class="wallet-option-name">MetaMask</div>
+        <div class="wallet-option-sub">Official wallet for Ritual Testnet</div>
+      </div>
+      <div style="margin-left:auto;background:var(--green);color:#000;font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;font-family:'DM Mono',monospace;">RECOMMENDED</div>
     </button>
 
-    <button class="wallet-option" onclick="connectWithWalletConnect()">
-      <div class="wallet-option-icon">🔵</div>
-      <div><div class="wallet-option-name">WalletConnect</div><div class="wallet-option-sub">Any mobile wallet via QR code</div></div>
-    </button>
+    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:14px 16px;margin:4px 0;">
+      <div style="font-size:12px;color:#fcd34d;font-family:'DM Mono',monospace;letter-spacing:0.5px;">
+        ⚠️ Only MetaMask is currently supported on Ritual Testnet. Other wallets coming soon!
+      </div>
+    </div>
 
-    <button class="wallet-option" onclick="connectWithCoinbase()">
-      <div class="wallet-option-icon">🔷</div>
-      <div><div class="wallet-option-name">Coinbase Wallet</div><div class="wallet-option-sub">Connect with Coinbase</div></div>
-    </button>
+    <div class="wmodal-divider">DON'T HAVE METAMASK?</div>
 
-    <button class="wallet-option" onclick="connectWithBrave()">
-      <div class="wallet-option-icon">🦁</div>
-      <div><div class="wallet-option-name">Brave Wallet</div><div class="wallet-option-sub">Built-in Brave browser wallet</div></div>
-    </button>
-
-    <div class="wmodal-divider">OR ANY INJECTED WALLET</div>
-
-    <button class="wallet-option" onclick="connectInjected()">
-      <div class="wallet-option-icon">⚡</div>
-      <div><div class="wallet-option-name">Other Wallet</div><div class="wallet-option-sub">Trust, Rainbow, or any EVM wallet</div></div>
+    <button class="wallet-option" onclick="downloadMetaMask()">
+      <div class="wallet-option-icon">⬇️</div>
+      <div>
+        <div class="wallet-option-name">Download MetaMask</div>
+        <div class="wallet-option-sub">Free — Available on Chrome, Firefox, Edge & Mobile</div>
+      </div>
     </button>
 
     <button class="wmodal-close" onclick="closeWalletModal()">Cancel</button>
@@ -274,6 +272,22 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
     <div class="modal-title" id="modalTitle">You Won!</div>
     <div class="modal-body" id="modalBody"></div>
     <button class="modal-btn" onclick="closeModal()">OK</button>
+  </div>
+</div>
+
+
+<!-- INSTALL METAMASK MODAL -->
+<div class="modal" id="installModal">
+  <div class="modal-box">
+    <div class="modal-icon">🦊</div>
+    <div class="modal-title">MetaMask Required</div>
+    <div class="modal-body">Ritual Testnet currently works best with MetaMask.
+
+It's free and takes less than 2 minutes to install!
+
+After installing, come back and connect.</div>
+    <button class="modal-btn" onclick="goToMetaMask()" style="margin-bottom:10px;">⬇️ Download MetaMask Free</button>
+    <button onclick="closeInstallModal()" style="width:100%;padding:12px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Cabinet Grotesk',sans-serif;font-weight:600;font-size:13px;border-radius:12px;cursor:pointer;">Cancel</button>
   </div>
 </div>
 
@@ -325,8 +339,9 @@ function closeWalletModal() {
 
 async function connectWithMetaMask() {
   closeWalletModal();
-  if (!window.ethereum) {
-    showModal('🦊','Install MetaMask','Visit metamask.io to install MetaMask, then come back!','Got it');
+  if (!window.ethereum || !window.ethereum.isMetaMask) {
+    // No MetaMask - show install modal
+    showInstallModal();
     return;
   }
   try {
@@ -335,54 +350,27 @@ async function connectWithMetaMask() {
   } catch(e) { showToast('❌ Cancelled', 'Connection rejected', true); }
 }
 
-async function connectWithCoinbase() {
+function downloadMetaMask() {
   closeWalletModal();
-  // Check for Coinbase Wallet provider
-  const provider = window.ethereum?.providers?.find(p => p.isCoinbaseWallet) || window.ethereum;
-  if (!provider) {
-    showModal('🔷','Install Coinbase Wallet','Visit wallet.coinbase.com to install, then come back!','Got it');
-    return;
-  }
-  try {
-    const accounts = await provider.request({ method:'eth_requestAccounts' });
-    await onWalletConnected(accounts[0]);
-  } catch(e) { showToast('❌ Cancelled', 'Connection rejected', true); }
+  showInstallModal();
 }
 
-async function connectWithBrave() {
-  closeWalletModal();
-  if (!window.ethereum?.isBraveWallet && !window.ethereum) {
-    showModal('🦁','Use Brave Browser','Open this page in Brave browser to use Brave Wallet!','Got it');
-    return;
-  }
-  try {
-    const accounts = await window.ethereum.request({ method:'eth_requestAccounts' });
-    await onWalletConnected(accounts[0]);
-  } catch(e) { showToast('❌ Cancelled', 'Connection rejected', true); }
+function showInstallModal() {
+  document.getElementById('installModal').classList.add('open');
 }
 
-async function connectInjected() {
-  closeWalletModal();
-  if (!window.ethereum) {
-    showModal('⚡','No Wallet Found','Please install an EVM wallet like MetaMask, Trust Wallet, or Rainbow.','Got it');
-    return;
-  }
-  try {
-    const accounts = await window.ethereum.request({ method:'eth_requestAccounts' });
-    await onWalletConnected(accounts[0]);
-  } catch(e) { showToast('❌ Cancelled', 'Connection rejected', true); }
+function closeInstallModal() {
+  document.getElementById('installModal').classList.remove('open');
 }
 
-async function connectWithWalletConnect() {
-  closeWalletModal();
-  // WalletConnect v2 — open deep link on mobile or show QR
-  showModal(
-    '📱',
-    'WalletConnect',
-    'On mobile:\n1. Open your wallet app (Trust, Rainbow, etc.)\n2. Tap "WalletConnect" inside your wallet\n3. Scan QR or paste the connection link\n\nOn desktop:\nInstall MetaMask extension and use that instead.',
-    'OK'
-  );
+function goToMetaMask() {
+  window.open('https://metamask.io/download/', '_blank');
+  closeInstallModal();
 }
+
+
+
+
 
 async function onWalletConnected(address) {
   wallet = address;
