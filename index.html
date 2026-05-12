@@ -116,6 +116,50 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
 .lb-loading{text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:20px;letter-spacing:1px;}
 
 /* WALLET MODAL */
+
+/* WALLET DROPDOWN */
+.wallet-wrapper { position: relative; }
+.wallet-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-width: 180px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 9999;
+  overflow: hidden;
+}
+.wallet-dropdown.open { display: block; }
+.wallet-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: none;
+  width: 100%;
+  background: transparent;
+  color: var(--text);
+  font-family: 'Cabinet Grotesk', sans-serif;
+  text-align: left;
+}
+.wallet-dropdown-item:hover { background: var(--surface2); }
+.wallet-dropdown-item.disconnect { color: var(--red); }
+.wallet-dropdown-addr {
+  padding: 10px 16px 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border);
+}
+
 .wmodal{display:none;position:fixed;inset:0;background:rgba(5,6,15,0.88);z-index:10001;align-items:center;justify-content:center;padding:20px;}
 .wmodal.open{display:flex;}
 .wmodal-box{background:var(--surface);border:1px solid var(--purple);border-radius:24px;padding:32px;max-width:380px;width:100%;box-shadow:0 0 60px rgba(139,92,246,0.3);}
@@ -162,7 +206,14 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
         <div class="logo-sub">Testnet · Chain ID 1979</div>
       </div>
     </div>
-    <button class="wallet-btn" id="walletBtn" onclick="openWalletModal()">Connect Wallet</button>
+    <div class="wallet-wrapper" id="walletWrapper">
+      <button class="wallet-btn" id="walletBtn" onclick="handleWalletClick()">Connect Wallet</button>
+      <div class="wallet-dropdown" id="walletDropdown">
+        <div class="wallet-dropdown-addr" id="dropdownAddr">0x0000...0000</div>
+        <button class="wallet-dropdown-item" onclick="copyAddress()">📋 Copy Address</button>
+        <button class="wallet-dropdown-item disconnect" onclick="disconnectWallet()">🔌 Disconnect</button>
+      </div>
+    </div>
   </div>
 
   <!-- NETWORK BANNER -->
@@ -329,10 +380,55 @@ let myScratches = 0;
 let myUsername = '';
 
 // ─── WALLET MODAL ─────────────────────────────────────────
+function handleWalletClick() {
+  if (wallet) {
+    // Toggle dropdown
+    document.getElementById('walletDropdown').classList.toggle('open');
+  } else {
+    document.getElementById('walletModal').classList.add('open');
+  }
+}
+
 function openWalletModal() {
   if (wallet) return;
   document.getElementById('walletModal').classList.add('open');
 }
+
+function disconnectWallet() {
+  wallet = null;
+  myPts = 0; myScratches = 0; myUsername = '';
+  const btn = document.getElementById('walletBtn');
+  btn.textContent = 'Connect Wallet';
+  btn.classList.remove('connected');
+  document.getElementById('walletDropdown').classList.remove('open');
+  document.getElementById('networkBanner').classList.remove('show');
+  document.getElementById('usernameBanner').classList.remove('show');
+  document.getElementById('statTotal').textContent = '0';
+  document.getElementById('statScratches').textContent = '0';
+  document.getElementById('statCountdown').textContent = '--:--:--';
+  document.getElementById('timerBadge').textContent = '🔌 Connect wallet to play';
+  document.getElementById('scratchHint').textContent = '👆 Connect wallet first';
+  document.getElementById('claimBtn').style.display = 'none';
+  clearInterval(cdInterval);
+  // Reset canvas
+  initCanvas();
+}
+
+function copyAddress() {
+  if (!wallet) return;
+  navigator.clipboard.writeText(wallet).then(() => {
+    showToast('✅ Address Copied!', wallet);
+  });
+  document.getElementById('walletDropdown').classList.remove('open');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const wrapper = document.getElementById('walletWrapper');
+  if (wrapper && !wrapper.contains(e.target)) {
+    document.getElementById('walletDropdown')?.classList.remove('open');
+  }
+});
 function closeWalletModal() {
   document.getElementById('walletModal').classList.remove('open');
 }
@@ -375,9 +471,11 @@ function goToMetaMask() {
 async function onWalletConnected(address) {
   wallet = address;
   const btn = document.getElementById('walletBtn');
-  btn.textContent = wallet.slice(0,6)+'...'+wallet.slice(-4);
+  const short = wallet.slice(0,6)+'...'+wallet.slice(-4);
+  btn.textContent = short;
   btn.classList.add('connected');
-  showToast('✅ Wallet Connected!', wallet.slice(0,6)+'...'+wallet.slice(-4));
+  document.getElementById('dropdownAddr').textContent = wallet.slice(0,10)+'...'+wallet.slice(-6);
+  showToast('✅ Wallet Connected!', short);
   await checkNetwork();
   await loadUserFromDB();
   loadLeaderboard();
@@ -617,7 +715,15 @@ if(window.ethereum){
   window.ethereum.request({method:'eth_accounts'}).then(accs=>{
     if(accs.length) onWalletConnected(accs[0]);
   });
-  window.ethereum.on('accountsChanged',accs=>{if(accs[0])onWalletConnected(accs[0]);});
+  window.ethereum.on('accountsChanged',accs=>{
+    if(accs.length && accs[0]) {
+      onWalletConnected(accs[0]);
+    } else {
+      // User disconnected from MetaMask
+      disconnectWallet();
+      showToast('🔌 Wallet Disconnected', 'Connect again to play');
+    }
+  });
   window.ethereum.on('chainChanged',()=>checkNetwork());
 }
 </script>
