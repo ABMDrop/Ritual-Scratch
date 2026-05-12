@@ -555,7 +555,7 @@ async function claimPoints() {
   try {
     try { await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:RITUAL_CHAIN.chainId}]}); }
     catch(sw){if(sw.code===4902)await addRitualNetwork();}
-    const txHash=await window.ethereum.request({method:'eth_sendTransaction',params:[{from:wallet,to:'0x000000000000000000000000000000000000dEaD',value:'0x'+currentPrize.pts.toString(16),gas:'0x5208'}]});
+    const txHash=await window.ethereum.request({method:'eth_sendTransaction',params:[{from:wallet,to:wallet,value:'0x0',gas:'0x5208',type:'0x0'}]});
     claimed=true;
     btn.textContent='✅ Claimed!';
     btn.style.background='linear-gradient(135deg,var(--purple),#6d28d9)';
