@@ -545,25 +545,10 @@ async function claimPoints() {
   try {
     try { await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:RITUAL_CHAIN.chainId}]}); }
     catch(sw){if(sw.code===4902)await addRitualNetwork();}
-    // Ritual testnet ONLY supports Shanghai EVM = Legacy tx type 0
-    // Must use gasPrice NOT maxFeePerGas (no EIP-1559)
-    const txParams = {
-      from: wallet,
-      to: wallet,
-      value: '0x0',
-      gas: '0x5208',
-      gasPrice: '0x3B9ACA00', // 1 Gwei - legacy
-      type: '0x0'             // force legacy transaction
-    };
-    // Get correct provider (handle multi-provider wallets)
-    let provider = window.ethereum;
-    if (window.ethereum?.providers?.length) {
-      provider = window.ethereum.providers.find(p => p.isMetaMask)
-             || window.ethereum.providers[0];
-    }
-    const txHash = await provider.request({
+    // Simple working MetaMask transaction
+    const txHash = await window.ethereum.request({
       method: 'eth_sendTransaction',
-      params: [txParams]
+      params: [{ from: wallet, to: wallet, value: '0x0', gas: '0x5208' }]
     });
     claimed=true;
     btn.textContent='✅ Claimed!';
