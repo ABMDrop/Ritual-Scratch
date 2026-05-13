@@ -821,7 +821,7 @@ function initCanvas() {
   ctx.fillText('Use finger or mouse',120,96);ctx.textAlign='left';
   ctx.globalCompositeOperation='destination-out';
   let drawing=false;
-  function scratchAt(x,y){ctx.beginPath();ctx.arc(x,y,22,0,Math.PI*2);ctx.fill();const d=ctx.getImageData(0,0,240,150).data;let c=0;for(let i=3;i<d.length;i+=4)if(d[i]<128)c++;if(!scratched&&c/(240*150)>0.55)revealPrize();}
+  function scratchAt(x,y){if(!wallet||!currentPrize)return;ctx.beginPath();ctx.arc(x,y,22,0,Math.PI*2);ctx.fill();const d=ctx.getImageData(0,0,240,150).data;let c=0;for(let i=3;i<d.length;i+=4)if(d[i]<128)c++;if(!scratched&&c/(240*150)>0.55)revealPrize();}
   function getPos(e,cv){const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];}
   canvas.onmousedown=(e)=>{drawing=true;scratchAt(...getPos(e,canvas))};
   canvas.onmousemove=(e)=>{if(drawing)scratchAt(...getPos(e,canvas))};
