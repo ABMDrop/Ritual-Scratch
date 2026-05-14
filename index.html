@@ -32,7 +32,8 @@
 
   let wallet=null,currentPrize=null,scratched=false,claimed=false,myPts=0,myScratches=0,myUsername='',myNFTs=[],cdInterval=null,postClaimCdInterval=null;
 
-  const CONTRACT_ABI=[{"inputs":[{"internalType":"uint8","name":"tier","type":"uint8"}],"name":"mintNFT","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+  const CONTRACT_ABI=[{"inputs":[{"internalType":"uint8","name":"tier","type":"uint8"}],"name":"mintNFT","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"tokensOfOwner","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"}];
+  async function updateNFTCount(){try{const provider=new ethers.BrowserProvider(window.ethereum);const contract=new ethers.Contract(CONTRACT_ADDRESS,CONTRACT_ABI,provider);const nfts=await contract.tokensOfOwner(wallet);document.getElementById('statNFTs').textContent=nfts.length;}catch(e){console.error('NFT count:',e);}}
   async function mintNFTOnChain(tier){const provider=new ethers.BrowserProvider(window.ethereum);const signer=await provider.getSigner();const contract=new ethers.Contract(CONTRACT_ADDRESS,CONTRACT_ABI,signer);const tx=await contract.mintNFT(tier);await tx.wait();return tx.hash;}
   async function callContract(sig,params,send=false){if(!CONTRACT_ADDRESS||CONTRACT_ADDRESS==='0xYOUR_CONTRACT_ADDRESS_HERE'||!window.ethereum)return null;const SELECTORS={'tokensOfOwner(address)':'0x8462151c','tokenTier(uint256)':'0x6a627842'};function encodeCall(s,p){const sel=SELECTORS[s];if(!sel)return'0x';if(s==='tokensOfOwner(address)')return sel+p[0].replace('0x','').padStart(64,'0').toLowerCase();if(s==='tokenTier(uint256)')return sel+p[0].toString(16).padStart(64,'0');return sel;}const data=encodeCall(sig,params);try{return await window.ethereum.request({method:'eth_call',params:[{to:CONTRACT_ADDRESS,data},'latest']});}catch(e){throw e;}}
 
@@ -94,6 +95,7 @@
     showLoader('Loading your profile...');
     await loadUserFromDB();
     await loadNFTs();
+    await updateNFTCount();
     hideLoader();
     loadLeaderboard();
   }
@@ -247,7 +249,7 @@
       showModal('🎊','NFT Minted!',`You Minted A ${NFT_NAMES[tier]}!
 ${NFT_COSTS[tier]} Points Deducted.
 TX: ${txHash.slice(0,20)}...`);
-      fireConfetti();updateNFTCards();
+      fireConfetti();updateNFTCards();await updateNFTCount();
     }catch(e){hideTxLoader();btn.disabled=false;updateNFTCards();showToast('❌ Mint Failed',(e.message||'TX Failed').slice(0,70),true);}
   };
 
