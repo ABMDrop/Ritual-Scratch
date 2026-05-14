@@ -22,16 +22,14 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  
-  // ─ HARDCODED BACKEND ONLY ─
-  
+  // ── HARDCODED BACKEND ONLY ──
   const CONTRACT_ADDRESS = '0xcEBa4b966578454B0DEBD3E0C36444716AB6cccd';
 
   const RITUAL_CHAIN = { chainId:'0x7bb', chainName:'Ritual Testnet', nativeCurrency:{name:'RITUAL',symbol:'RITUAL',decimals:18}, rpcUrls:['https://rpc.ritualfoundation.org'], blockExplorerUrls:['https://explorer.ritualfoundation.org'] };
   const PRIZES = [{pts:100,label:'🥇 JACKPOT!',chance:0.05},{pts:50,label:'🥈 RARE!',chance:0.15},{pts:25,label:'🥉 COMMON',chance:0.35},{pts:10,label:'✨ BASE',chance:0.45}];
   const NFT_COSTS=[500,1500,5000], NFT_NAMES=['Common Ritualist','Rare Ritualist','Legendary Ritualist'];
 
-  let wallet=null,currentPrize=null,scratched=false,claimed=false,myPts=0,myScratches=0,myUsername='',myNFTs=[],cdInterval=null,postClaimCdInterval=null;
+  let wallet=null,currentPrize=null,scratched=false,claimed=false,myPts=0,myLifetimePts=0,myScratches=0,myUsername='',myNFTs=[],cdInterval=null,postClaimCdInterval=null;
 
   const CONTRACT_ABI=[{"inputs":[{"internalType":"uint8","name":"tier","type":"uint8"}],"name":"mintNFT","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"tokensOfOwner","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"}];
   async function updateNFTCount(){try{const provider=new ethers.BrowserProvider(window.ethereum);const contract=new ethers.Contract(CONTRACT_ADDRESS,CONTRACT_ABI,provider);const nfts=await contract.tokensOfOwner(wallet);document.getElementById('statNFTs').textContent=nfts.length;}catch(e){console.error('NFT count:',e);}}
@@ -114,6 +112,11 @@
         myPts=data.total_points||0;
         myScratches=data.total_scratches||0;
         myUsername=data.username||'';
+        // lifetime_points: init from total_points for old users who don't have it yet
+        if(data.lifetime_points==null){
+          myLifetimePts=myPts;
+          await updateDoc(ref,{lifetime_points:myLifetimePts});
+        }else{myLifetimePts=data.lifetime_points;}
         const lastClaim=data.last_claim?new Date(data.last_claim).getTime():0;
         const diff=Date.now()-lastClaim;
         const cooldown=24*60*60*1000;
@@ -121,9 +124,9 @@
         if(!myUsername)document.getElementById('usernameBanner').classList.add('show');
         else document.getElementById('usernameInput').value=myUsername;
       }else{
-        await setDoc(ref,{wallet_address:wallet.toLowerCase(),username:'',total_points:0,total_scratches:0,last_claim:null,created_at:new Date().toISOString()});
+        await setDoc(ref,{wallet_address:wallet.toLowerCase(),username:'',total_points:0,lifetime_points:0,total_scratches:0,last_claim:null,created_at:new Date().toISOString()});
         // NEW wallet: 0 points, card available
-        myPts=0;myScratches=0;
+        myPts=0;myLifetimePts=0;myScratches=0;
         enableScratch();
         document.getElementById('usernameBanner').classList.add('show');
       }
@@ -158,8 +161,8 @@
 
   async function saveClaimToDB(pts){
     const ref=doc(db,'leaderboard',wallet.toLowerCase());
-    await updateDoc(ref,{total_points:myPts+pts,total_scratches:myScratches+1,last_claim:new Date().toISOString(),username:myUsername||null});
-    myPts+=pts;myScratches+=1;
+    await updateDoc(ref,{total_points:myPts+pts,lifetime_points:myLifetimePts+pts,total_scratches:myScratches+1,last_claim:new Date().toISOString(),username:myUsername||null});
+    myPts+=pts;myLifetimePts+=pts;myScratches+=1;
     updateStats();updateNFTCards();loadLeaderboard();
   }
 
@@ -172,7 +175,7 @@
   async function loadLeaderboard(){
     document.getElementById('lbStatus').textContent='Loading...';
     try{
-      const q=query(collection(db,'leaderboard'),orderBy('total_points','desc'),limit(10));
+      const q=query(collection(db,'leaderboard'),orderBy('lifetime_points','desc'),limit(10));
       const snap=await getDocs(q);
       const data=snap.docs.map(d=>d.data());
       document.getElementById('lbStatus').textContent=`⚔️ ${data.length} Scratchers · Live`;
@@ -187,7 +190,7 @@
           <div class="lb-rank">${medals[i]||(i+1)}</div>
           <div class="lb-avatar">${(name||'?')[0].toUpperCase()}</div>
           <div class="lb-info"><div class="lb-name">${name}${isYou?' <span style="color:var(--purple);font-size:11px">(You)</span>':''}</div><div class="lb-addr">${addr}</div></div>
-          <div style="text-align:right"><div class="lb-pts">${(u.total_points||0).toLocaleString()} pts</div><div class="lb-scratches">${u.total_scratches||0} scratches</div></div>
+          <div style="text-align:right"><div class="lb-pts">${(u.lifetime_points||u.total_points||0).toLocaleString()} pts</div><div class="lb-scratches">${u.total_scratches||0} scratches</div></div>
         </div>`;
       }).join('');
     }catch(e){document.getElementById('lbStatus').textContent='Error';document.getElementById('leaderboardList').innerHTML='<div class="lb-loading">❌ Could not load</div>';}
