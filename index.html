@@ -22,7 +22,9 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  // ── HARDCODED BACKEND ONLY ──
+  
+  // ─ HARDCODED BACKEND ONLY ─
+  
   const CONTRACT_ADDRESS = '0xcEBa4b966578454B0DEBD3E0C36444716AB6cccd';
 
   const RITUAL_CHAIN = { chainId:'0x7bb', chainName:'Ritual Testnet', nativeCurrency:{name:'RITUAL',symbol:'RITUAL',decimals:18}, rpcUrls:['https://rpc.ritualfoundation.org'], blockExplorerUrls:['https://explorer.ritualfoundation.org'] };
