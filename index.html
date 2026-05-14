@@ -60,7 +60,7 @@
     document.getElementById('usernameBanner').classList.remove('show');
     document.getElementById('myNFTs').classList.remove('show');
     ['statTotal','statScratches','statNFTs'].forEach(id=>document.getElementById(id).textContent='0');
-    document.getElementById('statCountdown').textContent='--:--:--';
+    // statCountdown removed
     document.getElementById('timerBadge').textContent='🔌 Connect wallet to play';
     document.getElementById('scratchHint').textContent='👆 Connect wallet first';
     document.getElementById('prizeAmt').textContent='?';
@@ -259,7 +259,7 @@ TX: ${txHash.slice(0,20)}...`);
     document.getElementById('postClaimArea').style.display='none';
     document.getElementById('claimBtn').style.display='none';
     document.getElementById('claimBtn').disabled=false;
-    document.getElementById('statCountdown').textContent='NOW!';
+    // statCountdown removed
     document.getElementById('timerBadge').textContent='🎴 Card Available!';
     document.getElementById('timerBadge').style.display='block';
     currentPrize=rollPrize();scratched=false;claimed=false;
@@ -363,9 +363,9 @@ TX: ${txHash.slice(0,20)}...`);
   // ── Countdown (in stat + in middle area) ──
   function startCountdown(ms){
     clearInterval(cdInterval);let rem=ms;
-    const el=document.getElementById('statCountdown'),badge=document.getElementById('timerBadge'),mid=document.getElementById('midCountdown');
+    const el=null,badge=document.getElementById('timerBadge'),mid=document.getElementById('midCountdown');
     function tick(){
-      if(rem<=0){clearInterval(cdInterval);el.textContent='NOW!';badge.textContent='🎴 Card Available!';if(mid)mid.textContent='00:00:00';enableScratch();return;}
+      if(rem<=0){clearInterval(cdInterval);if(el)el.textContent='NOW!';badge.textContent='🎴 Card Available!';if(mid)mid.textContent='00:00:00';enableScratch();return;}
       const h=Math.floor(rem/3600000),m=Math.floor((rem%3600000)/60000),s=Math.floor((rem%60000)/1000);
       const str=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
       el.textContent=str;badge.textContent='✅ Claimed — Next card soon';
@@ -422,8 +422,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .app{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:24px 16px 80px;}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;flex-wrap:wrap;gap:12px;}
 .logo{display:flex;align-items:center;gap:12px;}
-.logo-icon{width:44px;height:44px;background:transparent;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:none;}
-.logo-icon img{width:38px;height:38px;object-fit:contain;filter:brightness(0) invert(1);}
+.logo-icon{width:44px;height:44px;background:#000;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid rgba(255,255,255,0.1);}
+.logo-icon img{width:36px;height:36px;object-fit:contain;}
 .logo-text{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;background:linear-gradient(135deg,var(--purple2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .logo-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:-2px;}
 .wallet-wrapper{position:relative;}
@@ -446,7 +446,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .username-input:focus{border-color:var(--purple);}
 .username-save-btn{background:var(--purple);border:none;color:#fff;font-family:'Cabinet Grotesk',sans-serif;font-weight:700;font-size:13px;padding:10px 20px;border-radius:8px;cursor:pointer;}
 .username-save-btn:disabled{opacity:0.6;cursor:not-allowed;}
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 12px;text-align:center;}
 .stat-val{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:1px;background:linear-gradient(135deg,var(--purple2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .stat-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
@@ -603,7 +603,6 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
     <div class="stat-card"><div class="stat-val" id="statTotal">0</div><div class="stat-label">Your Points</div></div>
     <div class="stat-card"><div class="stat-val" id="statScratches">0</div><div class="stat-label">Cards Scratched</div></div>
     <div class="stat-card"><div class="stat-val" id="statNFTs">0</div><div class="stat-label">NFTs Owned</div></div>
-    <div class="stat-card"><div class="stat-val" id="statCountdown">--:--:--</div><div class="stat-label">Next Card</div></div>
   </div>
 
   <div class="main-grid">
