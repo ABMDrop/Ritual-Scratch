@@ -171,10 +171,10 @@
       const q=query(collection(db,'leaderboard'),orderBy('total_points','desc'),limit(10));
       const snap=await getDocs(q);
       const data=snap.docs.map(d=>d.data());
-      document.getElementById('lbStatus').textContent=`⚔️ ${data.length} scratchers · Live`;
+      document.getElementById('lbStatus').textContent=`⚔️ ${data.length} Scratchers · Live`;
       const medals=['🥇','🥈','🥉'];
       const list=document.getElementById('leaderboardList');
-      if(!data.length){list.innerHTML='<div class="lb-loading">🎴 No players yet</div>';return;}
+      if(!data.length){list.innerHTML='<div class="lb-loading">🎴 No Players Yet</div>';return;}
       list.innerHTML=data.map((u,i)=>{
         const isYou=wallet&&u.wallet_address?.toLowerCase()===wallet.toLowerCase();
         const name=u.username||(u.wallet_address?.slice(0,6)+'...'+u.wallet_address?.slice(-4));
@@ -224,7 +224,7 @@
       const pEl=document.getElementById(`progress${name}`),ptEl=document.getElementById(`pts${name}`),btnEl=document.getElementById(`mint${name}`);
       if(!wallet){pEl.style.width='0%';ptEl.textContent='Connect wallet';btnEl.textContent='🔌 Connect First';btnEl.disabled=true;return;}
       pEl.style.width=Math.min(100,(myPts/cost)*100)+'%';
-      if(myPts>=cost){ptEl.textContent='✅ Ready to mint!';btnEl.textContent=contractReady?`🎴 Mint for ${cost} pts`:'⏳ Coming Soon';btnEl.disabled=!contractReady;}
+      if(myPts>=cost){ptEl.textContent='✅ Ready To Mint!';btnEl.textContent=contractReady?`🎴 Mint For ${cost} pts`:'⏳ Coming Soon';btnEl.disabled=!contractReady;}
       else{ptEl.textContent=`Need ${(cost-myPts).toLocaleString()} more pts`;btnEl.textContent=`🔒 ${myPts}/${cost} pts`;btnEl.disabled=true;}
     });
   }
@@ -237,17 +237,17 @@
     try{
       try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:RITUAL_CHAIN.chainId}]});}catch(sw){if(sw.code===4902)await window.addRitualNetwork();}
       const txHash=await callContract('mintNFT(uint8)',[tier],true);
-      showTxLoader('Minting NFT on Ritual Chain... do not close this window');
+      showTxLoader('Minting NFT On Ritual Chain... Do Not Close This Window');
       const receipt=await waitForTx(txHash);
       hideTxLoader();
       await deductPointsInDB(NFT_COSTS[tier]);
       await loadNFTs();
       showToast('🎉 NFT Minted!',`${NFT_NAMES[tier]} · TX: ${txHash.slice(0,14)}...`);
-      showModal('🎊','NFT Minted!',`You minted a ${NFT_NAMES[tier]}!
-${NFT_COSTS[tier]} points deducted.
+      showModal('🎊','NFT Minted!',`You Minted A ${NFT_NAMES[tier]}!
+${NFT_COSTS[tier]} Points Deducted.
 TX: ${txHash.slice(0,20)}...`);
       fireConfetti();updateNFTCards();
-    }catch(e){hideTxLoader();btn.disabled=false;updateNFTCards();showToast('❌ Mint Failed',(e.message||'TX failed').slice(0,70),true);}
+    }catch(e){hideTxLoader();btn.disabled=false;updateNFTCards();showToast('❌ Mint Failed',(e.message||'TX Failed').slice(0,70),true);}
   };
 
   // ── Scratch ──
@@ -592,8 +592,8 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
   <div class="tx-loader-box">
     <div class="tx-pulse">⛓️</div>
     <div class="tx-loader-title">On-Chain Confirmation</div>
-    <div class="tx-loader-msg" id="txLoaderMsg">Waiting for blockchain<span class="dots"></span></div>
-    <div style="margin-top:16px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">Do not close this window</div>
+    <div class="tx-loader-msg" id="txLoaderMsg">Waiting For Blockchain<span class="dots"></span></div>
+    <div style="margin-top:16px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">Do Not Close This Window</div>
   </div>
 </div>
 
@@ -617,7 +617,7 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
   </div>
 
   <div class="network-banner" id="networkBanner">
-    <p>⚠️ Wrong network! Add <strong>Ritual Testnet</strong> to continue.</p>
+    <p>⚠️ Wrong Network! Add <strong>Ritual Testnet</strong> to continue.</p>
     <button class="add-network-btn" onclick="addRitualNetwork()">⚡ Add Ritual Testnet Automatically</button>
   </div>
 
@@ -636,7 +636,7 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
   <div class="main-grid">
     <div class="scratch-section">
       <div class="section-title">Daily Scratch Card</div>
-      <div class="timer-badge" id="timerBadge">🔌 Connect wallet to play</div>
+      <div class="timer-badge" id="timerBadge">🔌 Connect Wallet To Scratch</div>
       <!-- Active scratch area -->
       <div id="scratchArea">
         <div class="scratch-wrapper">
@@ -646,29 +646,29 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
           </div>
           <canvas id="scratchCanvas" width="240" height="150"></canvas>
         </div>
-        <div class="scratch-hint" id="scratchHint">👆 Connect wallet first</div>
+        <div class="scratch-hint" id="scratchHint">👆 Connect Wallet First</div>
       </div>
       <!-- Post-claim countdown shown in middle -->
       <div class="post-claim-area" id="postClaimArea">
         <div class="post-claim-label">✅ CLAIMED! NEXT CARD IN</div>
         <div class="post-claim-timer" id="midCountdown">24:00:00</div>
-        <div class="post-claim-sub">Come back when the timer hits zero</div>
+        <div class="post-claim-sub">Come Back After Timer</div>
       </div>
       <div class="overlay-msg" id="overlayMsg" style="display:none"></div>
-      <button class="claim-btn" id="claimBtn" onclick="claimPoints()">🔗 Claim Points on Ritual Chain</button>
+      <button class="claim-btn" id="claimBtn" onclick="claimPoints()">🔗 Claim Points On Ritual Chain</button>
     </div>
 
     <div class="info-section">
       <div class="section-title">How It Works</div>
-      <div class="how-item"><div class="how-num">1</div><div class="how-text"><strong>Connect MetaMask</strong><span>Official wallet for Ritual Testnet (Chain ID 1979).</span></div></div>
-      <div class="how-item"><div class="how-num">2</div><div class="how-text"><strong>Scratch Daily Card</strong><span>One free scratch every 24 hours. Win up to 100 pts!</span></div></div>
-      <div class="how-item"><div class="how-num">3</div><div class="how-text"><strong>Claim On-Chain</strong><span>Points only save AFTER TX confirms on-chain.</span></div></div>
-      <div class="how-item"><div class="how-num">4</div><div class="how-text"><strong>Mint NFTs 🎴</strong><span>Spend points to mint exclusive Ritual NFTs — 3 tiers!</span></div></div>
+      <div class="how-item"><div class="how-num">1</div><div class="how-text"><strong>Connect MetaMask</strong><span>Official Wallet For Ritual Testnet (Chain ID 1979).</span></div></div>
+      <div class="how-item"><div class="how-num">2</div><div class="how-text"><strong>Scratch Daily Card</strong><span>One Free Scratch Every 24 Hours. Stay Active On Testnet!</span></div></div>
+      <div class="how-item"><div class="how-num">3</div><div class="how-text"><strong>Claim On-Chain</strong><span>Points Only Save AFTER TX Confirms On-Chain. (Fully On-Chain) </span></div></div>
+      <div class="how-item"><div class="how-num">4</div><div class="how-text"><strong>Mint NFTs 🎴</strong><span>Spend Points To Mint Exclusive Ritual NFTs (3 Tiers!)</span></div></div>
       <div class="prize-table">
-        <div class="prize-row"><span>🥇 Jackpot</span><span class="pts">100 pts</span><span class="chance">5%</span></div>
-        <div class="prize-row"><span>🥈 Rare</span><span class="pts">50 pts</span><span class="chance">15%</span></div>
-        <div class="prize-row"><span>🥉 Common</span><span class="pts">25 pts</span><span class="chance">35%</span></div>
-        <div class="prize-row"><span>✨ Base</span><span class="pts">10 pts</span><span class="chance">45%</span></div>
+        <div class="prize-row"><span>🥇 Jackpot</span><span class="pts">100 Points</span><span class="chance">5%</span></div>
+        <div class="prize-row"><span>🥈 Rare</span><span class="pts">50 Points</span><span class="chance">15%</span></div>
+        <div class="prize-row"><span>🥉 Common</span><span class="pts">25 Points</span><span class="chance">35%</span></div>
+        <div class="prize-row"><span>✨ Base</span><span class="pts">10 Points</span><span class="chance">45%</span></div>
       </div>
     </div>
   </div>
@@ -676,7 +676,7 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
   <div class="nft-section">
     <div class="nft-section-header">
       <div class="section-title" style="margin-bottom:0">🎴 Mint Ritual NFTs</div>
-      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">Spend points → Mint on-chain</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">Spend Points → Mint On-Chain (NFT Usecase On Mainnet Launch!)</div>
     </div>
     <div class="nft-grid">
       <div class="nft-card common" id="nftCardCommon">
@@ -716,7 +716,7 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
       <div class="section-title" style="margin-bottom:0">🏆 Global Leaderboard</div>
       <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)" id="lbStatus">Loading...</div>
     </div>
-    <div id="leaderboardList"><div class="lb-loading">⏳ Loading leaderboard...</div></div>
+    <div id="leaderboardList"><div class="lb-loading">⏳ Loading Leaderboard...</div></div>
   </div>
 </div>
 
@@ -726,10 +726,10 @@ canvas#scratchCanvas{position:absolute;inset:0;border-radius:14px;}
     <div class="wmodal-sub">METAMASK REQUIRED FOR RITUAL TESTNET</div>
     <button class="wallet-option" onclick="connectWithMetaMask()">
       <div class="wallet-option-icon">🦊</div>
-      <div><div class="wallet-option-name">MetaMask</div><div class="wallet-option-sub">Official wallet for Ritual Testnet</div></div>
+      <div><div class="wallet-option-name">MetaMask</div><div class="wallet-option-sub">Official Wallet For Ritual Testnet</div></div>
       <div style="margin-left:auto;background:var(--green);color:#000;font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;font-family:'DM Mono',monospace;">RECOMMENDED</div>
     </button>
-    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 16px;margin:4px 0;font-size:12px;color:#fcd34d;font-family:'DM Mono',monospace;">⚠️ Only MetaMask supported on Ritual Testnet right now</div>
+    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 16px;margin:4px 0;font-size:12px;color:#fcd34d;font-family:'DM Mono',monospace;">⚠️ Only MetaMask Supported On Ritual Testnet</div>
     <button class="wallet-option" onclick="goToMetaMask()">
       <div class="wallet-option-icon">⬇️</div>
       <div><div class="wallet-option-name">Download MetaMask</div><div class="wallet-option-sub">Free — Chrome, Firefox, Edge & Mobile</div></div>
