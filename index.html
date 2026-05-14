@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ritual Scratch</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.1/dist/ethers.umd.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, orderBy, limit, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -31,9 +32,9 @@
 
   let wallet=null,currentPrize=null,scratched=false,claimed=false,myPts=0,myScratches=0,myUsername='',myNFTs=[],cdInterval=null,postClaimCdInterval=null;
 
-  const SELECTORS={'mintNFT(uint8)':'0xa0712d68','tokensOfOwner(address)':'0x8462151c','tokenTier(uint256)':'0x6a627842'};
-  function encodeCall(sig,params){const sel=SELECTORS[sig];if(!sel)return'0x';if(sig==='mintNFT(uint8)')return sel+params[0].toString(16).padStart(64,'0');if(sig==='tokensOfOwner(address)')return sel+params[0].replace('0x','').padStart(64,'0').toLowerCase();if(sig==='tokenTier(uint256)')return sel+params[0].toString(16).padStart(64,'0');return sel;}
-  async function callContract(sig,params,send=false){if(!CONTRACT_ADDRESS||CONTRACT_ADDRESS==='0xYOUR_CONTRACT_ADDRESS_HERE'||!window.ethereum)return null;const data=encodeCall(sig,params);try{if(send)return await window.ethereum.request({method:'eth_sendTransaction',params:[{from:wallet,to:CONTRACT_ADDRESS,data}]});return await window.ethereum.request({method:'eth_call',params:[{to:CONTRACT_ADDRESS,data},'latest']});}catch(e){throw e;}}
+  const CONTRACT_ABI=[{"inputs":[{"internalType":"uint8","name":"tier","type":"uint8"}],"name":"mintNFT","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+  async function mintNFTOnChain(tier){const provider=new ethers.BrowserProvider(window.ethereum);const signer=await provider.getSigner();const contract=new ethers.Contract(CONTRACT_ADDRESS,CONTRACT_ABI,signer);const tx=await contract.mintNFT(tier);await tx.wait();return tx.hash;}
+  async function callContract(sig,params,send=false){if(!CONTRACT_ADDRESS||CONTRACT_ADDRESS==='0xYOUR_CONTRACT_ADDRESS_HERE'||!window.ethereum)return null;const SELECTORS={'tokensOfOwner(address)':'0x8462151c','tokenTier(uint256)':'0x6a627842'};function encodeCall(s,p){const sel=SELECTORS[s];if(!sel)return'0x';if(s==='tokensOfOwner(address)')return sel+p[0].replace('0x','').padStart(64,'0').toLowerCase();if(s==='tokenTier(uint256)')return sel+p[0].toString(16).padStart(64,'0');return sel;}const data=encodeCall(sig,params);try{return await window.ethereum.request({method:'eth_call',params:[{to:CONTRACT_ADDRESS,data},'latest']});}catch(e){throw e;}}
 
   // ── Loaders ──
   function showLoader(msg='Loading...'){document.getElementById('loaderMsg').textContent=msg;document.getElementById('globalLoader').classList.add('show');}
@@ -236,7 +237,7 @@
     btn.disabled=true;btn.textContent='⏳ Waiting...';
     try{
       try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:RITUAL_CHAIN.chainId}]});}catch(sw){if(sw.code===4902)await window.addRitualNetwork();}
-      const txHash=await callContract('mintNFT(uint8)',[tier],true);
+      const txHash=await mintNFTOnChain(tier);
       showTxLoader('Minting NFT On Ritual Chain... Do Not Close This Window');
       const receipt=await waitForTx(txHash);
       hideTxLoader();
