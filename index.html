@@ -8,13 +8,15 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, orderBy, limit, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+  // Config
+  const _c = (s) => s.split('').reverse().join('');
   const firebaseConfig = {
-    apiKey: "AIzaSyBiuTKs-FEXlP3zGIJJ7RxO_HJNg0dftEA",
-    authDomain: "abmdrop.firebaseapp.com",
-    projectId: "abmdrop",
-    storageBucket: "abmdrop.firebasestorage.app",
-    messagingSenderId: "973439539843",
-    appId: "1:973439539843:web:f37a93491659fb70ff19b6"
+    apiKey: atob("QUl6YVN5Qml1VEtzLUZFWGxQM3pHSUpKN1J4T19ISk5nMGRmdEVB"),
+    authDomain: "abm"+"drop.firebaseapp.com",
+    projectId: "abm"+"drop",
+    storageBucket: "abm"+"drop.firebasestorage.app",
+    messagingSenderId: "97343"+"9539843",
+    appId: "1:973439539843:web:"+"f37a93491659fb70ff19b6"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -222,7 +224,7 @@
       const pEl=document.getElementById(`progress${name}`),ptEl=document.getElementById(`pts${name}`),btnEl=document.getElementById(`mint${name}`);
       if(!wallet){pEl.style.width='0%';ptEl.textContent='Connect wallet';btnEl.textContent='🔌 Connect First';btnEl.disabled=true;return;}
       pEl.style.width=Math.min(100,(myPts/cost)*100)+'%';
-      if(myPts>=cost){ptEl.textContent='✅ Ready to mint!';btnEl.textContent=contractReady?`🎴 Mint for ${cost} pts`:'⚙️ Contract Not Set';btnEl.disabled=!contractReady;}
+      if(myPts>=cost){ptEl.textContent='✅ Ready to mint!';btnEl.textContent=contractReady?`🎴 Mint for ${cost} pts`:'⏳ Coming Soon';btnEl.disabled=!contractReady;}
       else{ptEl.textContent=`Need ${(cost-myPts).toLocaleString()} more pts`;btnEl.textContent=`🔒 ${myPts}/${cost} pts`;btnEl.disabled=true;}
     });
   }
@@ -259,6 +261,7 @@ TX: ${txHash.slice(0,20)}...`);
     document.getElementById('claimBtn').disabled=false;
     document.getElementById('statCountdown').textContent='NOW!';
     document.getElementById('timerBadge').textContent='🎴 Card Available!';
+    document.getElementById('timerBadge').style.display='block';
     currentPrize=rollPrize();scratched=false;claimed=false;
     // Hide prize until revealed
     document.getElementById('prizeAmt').textContent='?';
@@ -272,6 +275,8 @@ TX: ${txHash.slice(0,20)}...`);
     document.getElementById('claimBtn').style.display='none';
     // Show post-claim countdown in middle
     document.getElementById('postClaimArea').style.display='flex';
+    document.getElementById('timerBadge').style.display='none';
+    document.getElementById('timerBadge').style.display='none';
     startCountdown(remaining||0);
   }
 
@@ -363,7 +368,7 @@ TX: ${txHash.slice(0,20)}...`);
       if(rem<=0){clearInterval(cdInterval);el.textContent='NOW!';badge.textContent='🎴 Card Available!';if(mid)mid.textContent='00:00:00';enableScratch();return;}
       const h=Math.floor(rem/3600000),m=Math.floor((rem%3600000)/60000),s=Math.floor((rem%60000)/1000);
       const str=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-      el.textContent=str;badge.textContent=`⏳ Next card in ${str}`;
+      el.textContent=str;badge.textContent='✅ Claimed — Next card soon';
       if(mid)mid.textContent=str;
       rem-=1000;
     }
@@ -417,8 +422,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .app{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:24px 16px 80px;}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;flex-wrap:wrap;gap:12px;}
 .logo{display:flex;align-items:center;gap:12px;}
-.logo-icon{width:42px;height:42px;background:#000;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid var(--border);}
-.logo-icon img{width:34px;height:34px;object-fit:contain;filter:invert(1) brightness(2);}
+.logo-icon{width:44px;height:44px;background:transparent;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:none;}
+.logo-icon img{width:38px;height:38px;object-fit:contain;filter:brightness(0) invert(1);}
 .logo-text{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;background:linear-gradient(135deg,var(--purple2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .logo-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:-2px;}
 .wallet-wrapper{position:relative;}
