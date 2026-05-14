@@ -124,7 +124,15 @@
         document.getElementById('usernameBanner').classList.add('show');
       }
       updateStats();updateNFTCards();
-    }catch(e){console.error('DB:',e);showToast('❌ DB Error','Check Firebase',true);enableScratch();}
+    }catch(e){console.error('DB:',e);showToast('❌ Firestore Rules Not Set','Go to Firebase → Firestore → Rules tab and publish rules',true);
+      console.error('FIREBASE ERROR - Set Firestore Rules:');
+      console.error('rules_version = \'2\';');
+      console.error('service cloud.firestore {');
+      console.error('  match /databases/{database}/documents {');
+      console.error('    match /{document=**} { allow read, write: if true; }');
+      console.error('  }');
+      console.error('}');
+      enableScratch();}
   }
 
   // ── Username uniqueness check ──
@@ -186,7 +194,7 @@
           <div style="text-align:right"><div class="lb-pts">${(u.total_points||0).toLocaleString()} pts</div><div class="lb-scratches">${u.total_scratches||0} scratches</div></div>
         </div>`;
       }).join('');
-    }catch(e){document.getElementById('lbStatus').textContent='Error';document.getElementById('leaderboardList').innerHTML='<div class="lb-loading">❌ Could not load</div>';}
+    }catch(e){document.getElementById('lbStatus').textContent='Error';document.getElementById('leaderboardList').innerHTML='<div class="lb-loading">❌ Firestore rules not set — go to Firebase Console → Firestore Database → Rules → Publish the open rules</div>';}
   }
 
   // ── NFT ──
@@ -284,7 +292,18 @@ TX: ${txHash.slice(0,20)}...`);
     const canvas=document.getElementById('scratchCanvas');
     const ctx=canvas.getContext('2d');
     ctx.clearRect(0,0,240,150);
-    if(!active)return;
+    if(!active){
+      // Draw "connect wallet" overlay when not active
+      const grad=ctx.createLinearGradient(0,0,240,150);
+      grad.addColorStop(0,'#0c0e1e');grad.addColorStop(1,'#12152a');
+      ctx.fillStyle=grad;ctx.fillRect(0,0,240,150);
+      ctx.fillStyle='rgba(139,92,246,0.3)';ctx.font='bold 13px monospace';
+      for(let y=20;y<150;y+=24)for(let x=0;x<240;x+=60)ctx.fillText('⬡ RITUAL',x,y);
+      ctx.fillStyle='rgba(139,92,246,0.6)';ctx.font='bold 14px sans-serif';ctx.textAlign='center';
+      ctx.fillText('🔌 CONNECT WALLET',120,70);ctx.font='11px monospace';
+      ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillText('to reveal your card',120,92);ctx.textAlign='left';
+      return;
+    }
     // Solid opaque cover
     const grad=ctx.createLinearGradient(0,0,240,150);
     grad.addColorStop(0,'#1e1040');grad.addColorStop(0.5,'#2d1b69');grad.addColorStop(1,'#1e1040');
