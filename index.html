@@ -362,18 +362,46 @@ TX: ${txHash.slice(0,20)}...`);
 
   // ── Countdown (in stat + in middle area) ──
   function startCountdown(ms){
-    clearInterval(cdInterval);let rem=ms;
-    const el=null,badge=document.getElementById('timerBadge'),mid=document.getElementById('midCountdown');
-    function tick(){
-      if(rem<=0){clearInterval(cdInterval);if(el)el.textContent='NOW!';badge.textContent='🎴 Card Available!';if(mid)mid.textContent='00:00:00';enableScratch();return;}
-      const h=Math.floor(rem/3600000),m=Math.floor((rem%3600000)/60000),s=Math.floor((rem%60000)/1000);
-      const str=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-      el.textContent=str;badge.textContent='✅ Claimed — Next card soon';
-      if(mid)mid.textContent=str;
-      rem-=1000;
+  clearInterval(cdInterval);
+  let rem=ms;
+
+  const badge=document.getElementById('timerBadge');
+  const mid=document.getElementById('midCountdown');
+
+  function tick(){
+
+    if(rem<=0){
+      clearInterval(cdInterval);
+
+      badge.textContent='🎴 Card Available!';
+
+      if(mid){
+        mid.textContent='00:00:00';
+      }
+
+      enableScratch();
+      return;
     }
-    tick();cdInterval=setInterval(tick,1000);
+
+    const h=Math.floor(rem/3600000);
+    const m=Math.floor((rem%3600000)/60000);
+    const s=Math.floor((rem%60000)/1000);
+
+    const str=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+    badge.textContent='✅ Claimed — Next card soon';
+
+    if(mid){
+      mid.textContent=str;
+    }
+
+    rem-=1000;
   }
+
+  tick();
+
+  cdInterval=setInterval(tick,1000);
+}
 
   function updateStats(){document.getElementById('statTotal').textContent=myPts.toLocaleString();document.getElementById('statScratches').textContent=myScratches;}
 
