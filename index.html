@@ -365,15 +365,23 @@ TX: ${txHash.slice(0,20)}...`);
       try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:RITUAL_CHAIN.chainId}]});}catch(sw){if(sw.code===4902)await window.addRitualNetwork();}
       // ── POINTS CLAIM TX ──
       const POINTS_CLAIM_CONTRACT = '0x90e1e14a6D1bC404a08588a817e32186B9578309';
-      // ABI-encode claimPoints(uint256 amount) correctly using ethers
       const _iface = new ethers.Interface(['function claimPoints(uint256 amount)']);
       const claimData = _iface.encodeFunctionData('claimPoints', [BigInt(currentPrize.pts)]);
+      // Dynamically estimate gas per wallet + 30% buffer (covers first-time vs returning claimers)
+      let _gasLimit;
+      try {
+        const _provider = new ethers.BrowserProvider(window.ethereum);
+        const _estimated = await _provider.estimateGas({ from: wallet, to: POINTS_CLAIM_CONTRACT, data: claimData });
+        _gasLimit = '0x' + ((_estimated * 130n) / 100n).toString(16);
+      } catch(_e) {
+        _gasLimit = '0x493E0'; // fallback: 300,000
+      }
       const txHash=await window.ethereum.request({method:'eth_sendTransaction',params:[{
         from:wallet,
         to:POINTS_CLAIM_CONTRACT,
         value:'0x0',
         data:claimData,
-        gas:'0x493E0'
+        gas:_gasLimit
       }]});
       btn.textContent='⏳ Confirming on-chain...';
       showTxLoader(`Confirming your ${currentPrize.pts} pts claim on Ritual Chain...`);
