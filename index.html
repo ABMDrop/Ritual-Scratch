@@ -364,15 +364,16 @@ TX: ${txHash.slice(0,20)}...`);
     try{
       try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:RITUAL_CHAIN.chainId}]});}catch(sw){if(sw.code===4902)await window.addRitualNetwork();}
       // ── POINTS CLAIM TX ──
-      // RitualScratchPoints contract — records claim on Ritual Chain
-      // Function: claimPoints(uint256 amount) → selector: 0x4ba79dfe
-      const POINTS_CLAIM_CONTRACT = '0x90e1e14a6D1bC404a08588a817e32186B9578309'; // ✅ Deployed RitualScratchPoints
+      // Replace POINTS_CLAIM_CONTRACT with your deployed contract address
+      // This records the claim on Ritual chain
+      const POINTS_CLAIM_CONTRACT = '0x90e1e14a6D1bC404a08588a817e32186B9578309'; // 🔧 REPLACE WITH YOUR CONTRACT
+      const claimData = '0x52495455414c' + wallet.replace('0x','').toLowerCase().padStart(64,'0'); // claim(address)
       const txHash=await window.ethereum.request({method:'eth_sendTransaction',params:[{
         from:wallet,
         to:POINTS_CLAIM_CONTRACT,
         value:'0x0',
-        gas:'0x15F90',
-        data:'0x4ba79dfe' + currentPrize.pts.toString(16).padStart(64,'0')
+        data:claimData,
+        gas:'0x7530'
       }]});
       btn.textContent='⏳ Confirming on-chain...';
       showTxLoader(`Confirming your ${currentPrize.pts} pts claim on Ritual Chain...`);
