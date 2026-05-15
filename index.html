@@ -322,7 +322,7 @@ TX: ${txHash.slice(0,20)}...`);
     ctx.globalCompositeOperation='destination-out';
     let drawing=false;
     function scratchAt(x,y){
-      if(!wallet||!currentPrize||!active)return;
+      if(!wallet||!currentPrize||!active||scratched)return;
       ctx.beginPath();ctx.arc(x,y,26,0,Math.PI*2);ctx.fill();
       const d=ctx.getImageData(0,0,280,340).data;let c=0;
       for(let i=3;i<d.length;i+=4)if(d[i]<128)c++;
@@ -339,7 +339,14 @@ TX: ${txHash.slice(0,20)}...`);
 
   function revealPrize(){
     scratched=true;
-    const _c=document.getElementById('scratchCanvas');const _x=_c.getContext('2d');_x.globalCompositeOperation='source-over';_x.clearRect(0,0,280,340);
+    const _c=document.getElementById('scratchCanvas');
+    const _x=_c.getContext('2d');
+    _x.globalCompositeOperation='source-over';
+    _x.clearRect(0,0,280,340);
+    // Disable all further scratch events
+    _c.onmousedown=null;_c.onmousemove=null;_c.onmouseup=null;
+    _c.ontouchstart=null;_c.ontouchmove=null;_c.ontouchend=null;
+    _c.style.cursor='default';
     document.getElementById('prizeAmt').textContent=currentPrize.pts;
     document.getElementById('scratchHint').textContent=`🎉 You won ${currentPrize.pts} Ritual Points!`;
     const btn=document.getElementById('claimBtn');
@@ -482,7 +489,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .app{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:24px 16px 80px;}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;flex-wrap:wrap;gap:12px;}
 .logo{display:flex;align-items:center;gap:12px;}
-.logo-icon{width:44px;height:44px;background:#000;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid rgba(255,255,255,0.1);}
+.logo-icon{width:44px;height:44px;background:transparent;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:none;}
 .logo-icon img{width:36px;height:36px;object-fit:contain;}
 .logo-text{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;background:linear-gradient(135deg,var(--purple2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .logo-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:-2px;}
@@ -542,10 +549,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .scratch-corner.br{bottom:14px;right:14px;border-width:0 2px 2px 0;border-radius:0 0 3px 0;}
 .scratch-logo-ring{
   width:110px;height:110px;border-radius:20px;
-  background:radial-gradient(ellipse at 40% 30%,#2a1f00 0%,#0d0900 100%);
-  border:1px solid rgba(212,175,55,0.5);
+  background:transparent;
+  border:none;
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 30px rgba(212,175,55,0.2),0 0 60px rgba(212,175,55,0.06),inset 0 0 24px rgba(0,0,0,0.6);
   position:relative;
 }
 
