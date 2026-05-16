@@ -388,22 +388,34 @@ TX: ${txHash.slice(0,20)}...`);
       const receipt=await waitForTx(txHash);
       hideTxLoader();
       if(receipt.status==='0x0')throw new Error('Transaction reverted');
-      // Only save AFTER confirmed
+      // Only save AFTER on-chain confirmed
       claimed=true;
       const earnedPts=currentPrize.pts;
       const earnedLabel=currentPrize.label;
       btn.textContent='✅ Claimed!';
       btn.style.background='linear-gradient(135deg,var(--purple),#6d28d9)';
-      await saveClaimToDB(earnedPts);
-      showToast('✅ Points Claimed!',`+${earnedPts} pts · TX: ${txHash.slice(0,14)}...`);
-      showModal('🎊',earnedLabel,`You earned ${earnedPts} Ritual Points!\n\nSaved to leaderboard ✅\nTX: ${txHash.slice(0,20)}...`);
+      // Save to Firebase separately — TX is already confirmed on-chain
+      try {
+        await saveClaimToDB(earnedPts);
+        showToast('✅ Points Claimed!',`+${earnedPts} pts · TX: ${txHash.slice(0,14)}...`);
+        showModal('🎊',earnedLabel,`You earned ${earnedPts} Ritual Points!\n\nSaved to leaderboard ✅\nTX: ${txHash.slice(0,20)}...`);
+      } catch(dbErr) {
+        // TX succeeded on-chain — only Firebase save failed
+        showToast('✅ TX Confirmed! (Leaderboard sync failed)',`+${earnedPts} pts on-chain · TX: ${txHash.slice(0,14)}...`);
+        showModal('✅',earnedLabel,`You earned ${earnedPts} Ritual Points on-chain!\n\nTX: ${txHash.slice(0,20)}...\n\n⚠️ Leaderboard will sync shortly.`);
+        console.error('Firebase sync failed:',dbErr);
+      }
       if(earnedPts>=50)fireConfetti();
-      // Show countdown in scratch area after claim
       setTimeout(()=>{ disableScratch(24*60*60*1000); }, 2000);
     }catch(e){
       hideTxLoader();btn.disabled=false;
       btn.textContent=`🔗 Claim ${currentPrize.pts} Points on Ritual Chain`;
-      showToast('❌ TX Failed — No Points Added',e.message?e.message.slice(0,70):'Rejected',true);
+      const isRejected = e.message && (e.message.includes('rejected') || e.message.includes('denied') || e.message.includes('cancel'));
+      showToast(
+        isRejected ? '❌ Transaction Rejected' : '❌ TX Failed — No Points Added',
+        e.message ? e.message.slice(0,70) : 'Transaction rejected',
+        true
+      );
     }
   };
 
