@@ -6,22 +6,13 @@
 <title>Ritual Scratch</title>
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.1/dist/ethers.umd.min.js"></script>
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, orderBy, limit, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-  // Config
-  const _c = (s) => s.split('').reverse().join('');
-  const firebaseConfig = {
-    apiKey: atob("QUl6YVN5Qml1VEtzLUZFWGxQM3pHSUpKN1J4T19ISk5nMGRmdEVB"),
-    authDomain: "abm"+"drop.firebaseapp.com",
-    projectId: "abm"+"drop",
-    storageBucket: "abm"+"drop.firebasestorage.app",
-    messagingSenderId: "97343"+"9539843",
-    appId: "1:973439539843:web:"+"f37a93491659fb70ff19b6"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  // ── Supabase Config ──
+  const supabase = createClient(
+    'https://thmchcazqxtbsqnfjexo.supabase.co',
+    'sb_publishable_8rgPU20i6GPV073CYjcupw_d2HIP78Y'
+  );
   // ── HARDCODED BACKEND ONLY ──
   const CONTRACT_ADDRESS = '0xcEBa4b966578454B0DEBD3E0C36444716AB6cccd';
 
@@ -102,36 +93,36 @@
   async function checkNetwork(){if(!window.ethereum)return;const c=await window.ethereum.request({method:'eth_chainId'});document.getElementById('networkBanner').classList.toggle('show',c.toLowerCase()!==RITUAL_CHAIN.chainId);}
   window.addRitualNetwork=async()=>{try{await window.ethereum.request({method:'wallet_addEthereumChain',params:[RITUAL_CHAIN]});document.getElementById('networkBanner').classList.remove('show');showToast('✅ Ritual Testnet Added!','Chain ID 1979');}catch(e){showToast('❌ Error',e.message.slice(0,60),true);}};
 
-  // ── Firebase ──
+  // ── Supabase ──
   async function loadUserFromDB(){
     try{
-      const ref=doc(db,'leaderboard',wallet.toLowerCase());
-      const snap=await getDoc(ref);
-      if(snap.exists()){
-        const data=snap.data();
+      const {data,error}=await supabase.from('leaderboard').select('*').eq('wallet_address',wallet.toLowerCase()).maybeSingle();
+      if(error)throw error;
+      if(data){
         myPts=data.total_points||0;
         myScratches=data.total_scratches||0;
         myUsername=data.username||'';
         // lifetime_points: init from total_points for old users who don't have it yet
         if(data.lifetime_points==null){
           myLifetimePts=myPts;
-          await updateDoc(ref,{lifetime_points:myLifetimePts});
+          await supabase.from('leaderboard').update({lifetime_points:myLifetimePts}).eq('wallet_address',wallet.toLowerCase());
         }else{myLifetimePts=data.lifetime_points;}
-        const lastClaim=data.last_claim?new Date(data.last_claim).getTime():0;
+        const lastClaim=data.last_claim?Number(data.last_claim):0;
         const diff=Date.now()-lastClaim;
         const cooldown=24*60*60*1000;
         if(diff<cooldown){disableScratch(cooldown-diff);}else{enableScratch();}
         if(!myUsername)document.getElementById('usernameBanner').classList.add('show');
         else document.getElementById('usernameInput').value=myUsername;
       }else{
-        await setDoc(ref,{wallet_address:wallet.toLowerCase(),username:'',total_points:0,lifetime_points:0,total_scratches:0,last_claim:null,created_at:new Date().toISOString()});
+        const {error:insErr}=await supabase.from('leaderboard').insert({wallet_address:wallet.toLowerCase(),username:'',total_points:0,lifetime_points:0,total_scratches:0,last_claim:null,created_at:new Date().toISOString()});
+        if(insErr)throw insErr;
         // NEW wallet: 0 points, card available
         myPts=0;myLifetimePts=0;myScratches=0;
         enableScratch();
         document.getElementById('usernameBanner').classList.add('show');
       }
       updateStats();updateNFTCards();
-    }catch(e){console.error('DB:',e);showToast('❌ DB Error','Check Firebase',true);enableScratch();}
+    }catch(e){console.error('DB:',e);showToast('❌ DB Error','Check Supabase',true);enableScratch();}
   }
 
   // ── Username uniqueness check ──
@@ -142,16 +133,17 @@
     btn.textContent='Checking...';btn.disabled=true;
     try{
       // Check if username already taken
-      const q=query(collection(db,'leaderboard'),where('username','==',val),limit(1));
-      const snap=await getDocs(q);
-      const taken=snap.docs.some(d=>d.id!==wallet.toLowerCase());
+      const {data:existing,error:chkErr}=await supabase.from('leaderboard').select('wallet_address').eq('username',val).limit(1);
+      if(chkErr)throw chkErr;
+      const taken=(existing||[]).some(d=>d.wallet_address!==wallet.toLowerCase());
       if(taken){
         showToast('❌ Username Taken',`"${val}" is already taken. Choose another.`,true);
         document.getElementById('usernameBanner').querySelector('input').style.borderColor='var(--red)';
         btn.textContent='Save';btn.disabled=false;return;
       }
       myUsername=val;
-      await updateDoc(doc(db,'leaderboard',wallet.toLowerCase()),{username:val});
+      const {error:updErr}=await supabase.from('leaderboard').update({username:val}).eq('wallet_address',wallet.toLowerCase());
+      if(updErr)throw updErr;
       document.getElementById('usernameBanner').classList.remove('show');
       showToast('✅ Username Saved!',val);
       loadLeaderboard();
@@ -160,28 +152,28 @@
   };
 
   async function saveClaimToDB(pts){
-    const ref=doc(db,'leaderboard',wallet.toLowerCase());
-    await updateDoc(ref,{total_points:myPts+pts,lifetime_points:myLifetimePts+pts,total_scratches:myScratches+1,last_claim:Date.now(),username:myUsername||null});
+    const {error}=await supabase.from('leaderboard').update({total_points:myPts+pts,lifetime_points:myLifetimePts+pts,total_scratches:myScratches+1,last_claim:Date.now(),username:myUsername||null}).eq('wallet_address',wallet.toLowerCase());
+    if(error)throw error;
     myPts+=pts;myLifetimePts+=pts;myScratches+=1;
     updateStats();updateNFTCards();loadLeaderboard();
   }
 
   async function deductPointsInDB(pts){
     const newPts=Math.max(0,myPts-pts);
-    await updateDoc(doc(db,'leaderboard',wallet.toLowerCase()),{total_points:newPts});
+    const {error}=await supabase.from('leaderboard').update({total_points:newPts}).eq('wallet_address',wallet.toLowerCase());
+    if(error)throw error;
     myPts=newPts;updateStats();updateNFTCards();loadLeaderboard();
   }
 
   async function loadLeaderboard(){
     document.getElementById('lbStatus').textContent='Loading...';
     try{
-      const q=query(collection(db,'leaderboard'),orderBy('lifetime_points','desc'),limit(10));
-      const snap=await getDocs(q);
-      const data=snap.docs.map(d=>d.data());
-      document.getElementById('lbStatus').textContent=`⚔️ ${data.length} Scratchers · Live`;
+      const {data,error}=await supabase.from('leaderboard').select('*').order('lifetime_points',{ascending:false}).limit(10);
+      if(error)throw error;
+      document.getElementById('lbStatus').textContent=`⚔️ ${(data||[]).length} Scratchers · Live`;
       const medals=['🥇','🥈','🥉'];
       const list=document.getElementById('leaderboardList');
-      if(!data.length){list.innerHTML='<div class="lb-loading">🎴 No Players Yet</div>';return;}
+      if(!data||!data.length){list.innerHTML='<div class="lb-loading">🎴 No Players Yet</div>';return;}
       list.innerHTML=data.map((u,i)=>{
         const isYou=wallet&&u.wallet_address?.toLowerCase()===wallet.toLowerCase();
         const name=u.username||(u.wallet_address?.slice(0,6)+'...'+u.wallet_address?.slice(-4));
@@ -462,7 +454,7 @@ TX: ${txHash.slice(0,20)}...`);
 
   window.addEventListener('DOMContentLoaded',async()=>{
     initCanvas(false);
-    showLoader('Connecting to Firebase...');
+    showLoader('Connecting to Supabase...');
     await loadLeaderboard();
     hideLoader();
     if(window.ethereum){
