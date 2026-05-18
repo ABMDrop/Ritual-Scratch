@@ -161,7 +161,7 @@
 
   async function saveClaimToDB(pts){
     const ref=doc(db,'leaderboard',wallet.toLowerCase());
-    await updateDoc(ref,{total_points:myPts+pts,lifetime_points:myLifetimePts+pts,total_scratches:myScratches+1,last_claim:new Date().toISOString(),username:myUsername||null});
+    await updateDoc(ref,{total_points:myPts+pts,lifetime_points:myLifetimePts+pts,total_scratches:myScratches+1,last_claim:Date.now(),username:myUsername||null});
     myPts+=pts;myLifetimePts+=pts;myScratches+=1;
     updateStats();updateNFTCards();loadLeaderboard();
   }
@@ -264,13 +264,15 @@ TX: ${txHash.slice(0,20)}...`);
     document.getElementById('scratchArea').style.display='block';
     document.getElementById('overlayMsg').style.display='none';
     document.getElementById('postClaimArea').style.display='none';
-    document.getElementById('claimBtn').style.display='none';
-    document.getElementById('claimBtn').disabled=false;
-    // statCountdown removed
+    const _cb=document.getElementById('claimBtn');
+    _cb.style.display='none';
+    _cb.disabled=false;
+    _cb.textContent='🔗 Claim Points on Ritual Chain';
+    _cb.style.background='';
+    _cb.onclick=null;
     document.getElementById('timerBadge').textContent='🎴 Card Available!';
     document.getElementById('timerBadge').style.display='block';
     currentPrize=rollPrize();scratched=false;claimed=false;
-    // Hide prize until revealed
     document.getElementById('prizeAmt').textContent='?';
     document.getElementById('scratchHint').textContent='👆 Scratch to reveal your prize!';
     initCanvas(true);
@@ -338,6 +340,7 @@ TX: ${txHash.slice(0,20)}...`);
   }
 
   function revealPrize(){
+    if(scratched)return;
     scratched=true;
     const _c=document.getElementById('scratchCanvas');
     const _x=_c.getContext('2d');
@@ -388,34 +391,22 @@ TX: ${txHash.slice(0,20)}...`);
       const receipt=await waitForTx(txHash);
       hideTxLoader();
       if(receipt.status==='0x0')throw new Error('Transaction reverted');
-      // Only save AFTER on-chain confirmed
+      // Only save AFTER confirmed
       claimed=true;
       const earnedPts=currentPrize.pts;
       const earnedLabel=currentPrize.label;
       btn.textContent='✅ Claimed!';
       btn.style.background='linear-gradient(135deg,var(--purple),#6d28d9)';
-      // Save to Firebase separately — TX is already confirmed on-chain
-      try {
-        await saveClaimToDB(earnedPts);
-        showToast('✅ Points Claimed!',`+${earnedPts} pts · TX: ${txHash.slice(0,14)}...`);
-        showModal('🎊',earnedLabel,`You earned ${earnedPts} Ritual Points!\n\nSaved to leaderboard ✅\nTX: ${txHash.slice(0,20)}...`);
-      } catch(dbErr) {
-        // TX succeeded on-chain — only Firebase save failed
-        showToast('✅ TX Confirmed! (Leaderboard sync failed)',`+${earnedPts} pts on-chain · TX: ${txHash.slice(0,14)}...`);
-        showModal('✅',earnedLabel,`You earned ${earnedPts} Ritual Points on-chain!\n\nTX: ${txHash.slice(0,20)}...\n\n⚠️ Leaderboard will sync shortly.`);
-        console.error('Firebase sync failed:',dbErr);
-      }
+      await saveClaimToDB(earnedPts);
+      showToast('✅ Points Claimed!',`+${earnedPts} pts · TX: ${txHash.slice(0,14)}...`);
+      showModal('🎊',earnedLabel,`You earned ${earnedPts} Ritual Points!\n\nSaved to leaderboard ✅\nTX: ${txHash.slice(0,20)}...`);
       if(earnedPts>=50)fireConfetti();
+      // Show countdown in scratch area after claim
       setTimeout(()=>{ disableScratch(24*60*60*1000); }, 2000);
     }catch(e){
       hideTxLoader();btn.disabled=false;
       btn.textContent=`🔗 Claim ${currentPrize.pts} Points on Ritual Chain`;
-      const isRejected = e.message && (e.message.includes('rejected') || e.message.includes('denied') || e.message.includes('cancel'));
-      showToast(
-        isRejected ? '❌ Transaction Rejected' : '❌ TX Failed — No Points Added',
-        e.message ? e.message.slice(0,70) : 'Transaction rejected',
-        true
-      );
+      showToast('❌ TX Failed — No Points Added',e.message?e.message.slice(0,70):'Rejected',true);
     }
   };
 
